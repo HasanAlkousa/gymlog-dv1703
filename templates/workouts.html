@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Sessions - GymLog{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Start a session</h2>
+  <form method="post" action="{{ url_for('start_workout') }}" class="field-row">
+    <div>
+      <label for="program_id">Program</label>
+      <select id="program_id" name="program_id">
+        <option value="">Empty session</option>
+        {% for p in programs %}<option value="{{ p.program_id }}">{{ p.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div><button type="submit">Start</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Training log</h2>
+  {% if workouts %}
+  <table>
+    <tr><th>Date</th><th>Program</th><th class="num">Exercises</th><th class="num">Sets</th>
+        <th class="num">Minutes</th><th class="num">Volume</th><th></th></tr>
+    {% for w in workouts %}
+    <tr>
+      <td>{{ w.started_at|dt }}{% if not w.ended_at %} <span class="stamp">OPEN</span>{% endif %}</td>
+      <td>{{ w.program_name or 'Free session' }}</td>
+      <td class="num">{{ w.exercises }}</td>
+      <td class="num">{{ w.sets }}</td>
+      <td class="num">{{ w.minutes or '-' }}</td>
+      <td class="num">{{ w.total_volume_kg|kg }} kg</td>
+      <td class="num"><a href="{{ url_for('workout_detail', workout_id=w.workout_id) }}">Open</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="empty">Nothing logged yet.</p>{% endif %}
+</div>
+{% endblock %}

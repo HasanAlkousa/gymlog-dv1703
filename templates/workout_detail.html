@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Session - GymLog{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h1>{{ workout.started_at|dt }}{% if workout.program_name %} &middot; {{ workout.program_name }}{% endif %}</h1>
+  <div class="field-row">
+    <div><div class="figure">{{ workout.total_volume_kg|kg }} <small>kg</small></div>
+         <div class="figure-label">Volume so far, kept up to date by a trigger</div></div>
+    {% if not workout.ended_at %}
+    <form method="post" action="{{ url_for('finish_workout', workout_id=workout.workout_id) }}" class="field-row">
+      <div><label for="notes">How did it go?</label><input id="notes" name="notes" placeholder="Optional note"></div>
+      <div><button type="submit">Finish session</button></div>
+    </form>
+    {% else %}
+      <div class="note">Finished {{ workout.ended_at.strftime('%H:%M') }}{% if workout.notes %} &middot; {{ workout.notes }}{% endif %}</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Add a set</h2>
+  <form method="post" action="{{ url_for('log_set', workout_id=workout.workout_id) }}" class="field-row">
+    <div style="flex: 3 1 14rem;">
+      <label for="exercise_id">Exercise</label>
+      <select id="exercise_id" name="exercise_id" required>
+        {% for e in exercises %}<option value="{{ e.exercise_id }}">{{ e.name }} ({{ e.muscle_group }})</option>{% endfor %}
+      </select>
+    </div>
+    <div><label for="weight_kg">Weight (kg)</label><input id="weight_kg" name="weight_kg" type="number" step="0.5" min="0" required></div>
+    <div><label for="reps">Reps</label><input id="reps" name="reps" type="number" min="1" max="100" required></div>
+    <div><label for="rpe">RPE</label><input id="rpe" name="rpe" type="number" step="0.5" min="1" max="10"></div>
+    <div style="flex: 0 0 auto;"><label for="is_warmup">Warm-up</label>
+      <input id="is_warmup" name="is_warmup" type="checkbox" style="width:auto;"></div>
+    <div style="flex: 0 0 auto;"><button type="submit">Log set</button></div>
+  </form>
+</div>
+
+{% for block in blocks %}
+<div class="card">
+  <h3>{{ block.exercise_name }} <span class="note">&middot; {{ block.muscle_group }} &middot; {{ block.equipment }}</span></h3>
+  {% if block.sets %}
+  <table>
+    <tr><th>#</th><th class="num">Weight</th><th class="num">Reps</th><th class="num">RPE</th>
+        <th class="num">Est. 1RM</th><th></th><th></th></tr>
+    {% for s in block.sets %}
+    <tr class="set-row">
+      <td>{{ s.set_number }}</td>
+      <td class="num"><span class="load">{{ s.weight_kg|round(1) }}</span> kg</td>
+      <td class="num">{{ s.reps }}</td>
+      <td class="num">{{ s.rpe or '-' }}</td>
+      <td class="num">{{ s.est_1rm }}</td>
+      <td>{% if s.is_warmup %}<span class="warmup">warm-up</span>
+          {% elif s.is_pr %}<span class="stamp">RECORD</span>{% endif %}</td>
+      <td class="num">
+        <form method="post" action="{{ url_for('delete_set', set_id=s.set_id) }}">
+          <button class="tiny" type="submit">delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p class="empty">Planned, no sets logged yet.</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

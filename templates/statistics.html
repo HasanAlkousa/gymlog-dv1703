@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Statistics - GymLog{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2>Progression</h2>
+  <form method="get" class="field-row">
+    <div style="flex: 3 1 16rem;">
+      <label for="exercise_id">Exercise</label>
+      <select id="exercise_id" name="exercise_id" onchange="this.form.submit()">
+        {% for e in exercises %}
+          <option value="{{ e.exercise_id }}" {{ 'selected' if e.exercise_id == selected }}>{{ e.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="flex: 0 0 auto;"><button class="ghost" type="submit">Show</button></div>
+  </form>
+
+  {% if progression %}
+    <canvas id="progChart" height="90"></canvas>
+    <table>
+      <tr><th>Week of</th><th class="num">Sessions</th><th class="num">Sets</th>
+          <th class="num">Heaviest</th><th class="num">Est. 1RM</th><th class="num">Volume</th></tr>
+      {% for r in progression %}
+      <tr><td>{{ r.week_start }}</td>
+          <td class="num">{{ r.sessions }}</td>
+          <td class="num">{{ r.working_sets }}</td>
+          <td class="num">{{ r.heaviest_kg }} kg</td>
+          <td class="num"><span class="load">{{ r.best_est_1rm }}</span></td>
+          <td class="num">{{ r.volume_kg|kg }} kg</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">No sets logged for this exercise in the last 16 weeks.</p>
+  {% endif %}
+</div>
+
+<div class="grid two">
+  <div class="card">
+    <h2>Consistency, last 12 weeks</h2>
+    {% if consistency %}
+    <table>
+      <tr><th>Week of</th><th class="num">Sessions</th><th class="num">Avg minutes</th><th class="num">Volume</th></tr>
+      {% for r in consistency %}
+      <tr><td>{{ r.week_start }}</td><td class="num">{{ r.sessions }}</td>
+          <td class="num">{{ r.avg_minutes or '-' }}</td>
+          <td class="num">{{ r.volume_kg|kg }} kg</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="empty">Nothing to show yet.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Relative strength, all users</h2>
+    <p class="note">Estimated 1RM divided by the most recent body weight.</p>
+    {% if ranking %}
+    <table>
+      <tr><th>#</th><th>Lifter</th><th class="num">1RM</th><th class="num">Body weight</th><th class="num">Ratio</th></tr>
+      {% for r in ranking %}
+      <tr><td>{{ loop.index }}</td><td>{{ r.full_name }}</td>
+          <td class="num">{{ r.est_1rm }}</td><td class="num">{{ r.bodyweight_kg }}</td>
+          <td class="num"><span class="load">{{ r.strength_ratio }}</span></td></tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="empty">Nobody has logged this exercise yet.</p>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Volume by muscle group, last 90 days</h2>
+  {% if balance %}
+    {% set top = balance[0].volume_kg %}
+    {% for row in balance %}
+      <div class="bar-row">
+        <span>{{ row.muscle_group }}</span>
+        <span><span class="bar {{ row.body_region }}" style="width: {{ (100 * row.volume_kg / top)|round(0, 'floor') }}%; display:block;"></span></span>
+        <span class="bar-val">{{ row.total_sets }} sets</span>
+      </div>
+    {% endfor %}
+  {% else %}<p class="empty">Nothing to show yet.</p>{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if progression %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+new Chart(document.getElementById('progChart'), {
+  type: 'line',
+  data: {
+    labels: {{ progression|map(attribute='week_start')|map('string')|list|tojson }},
+    datasets: [{
+      label: 'Estimated 1RM (kg)',
+      data: {{ progression|map(attribute='best_est_1rm')|map('float')|list|tojson }},
+      borderColor: '#171d24', backgroundColor: '#171d24',
+      tension: 0.2, pointRadius: 2, borderWidth: 2
+    }]
+  },
+  options: { plugins: { legend: { display: false } },
+             scales: { y: { grid: { color: '#e5e8e3' } }, x: { grid: { display: false } } } }
+});
+</script>
+{% endif %}
+{% endblock %}

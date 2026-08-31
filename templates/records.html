@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Records - GymLog{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Personal records</h1>
+  <p class="note">This table is never written to by the application. A trigger on every logged set decides whether a record has been beaten.</p>
+  {% if records %}
+  <table>
+    <tr><th>Exercise</th><th>Muscle group</th><th class="num">Best set</th>
+        <th class="num">Estimated 1RM</th><th class="num">Date</th></tr>
+    {% for r in records %}
+    <tr>
+      <td>{{ r.exercise }}</td>
+      <td>{{ r.muscle_group }}</td>
+      <td class="num"><span class="load">{{ r.best_weight_kg|round(1) }}</span> kg &times; {{ r.best_reps }}</td>
+      <td class="num"><span class="load">{{ r.best_est_1rm }}</span></td>
+      <td class="num">{{ r.achieved_on }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="empty">Log a session and your first records appear here.</p>{% endif %}
+</div>
+{% endblock %}

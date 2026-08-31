@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Programs - GymLog{% endblock %}
+{% block content %}
+<h1>Programs</h1>
+{% for p in programs %}
+<div class="card">
+  <h2>{{ p.name }} <span class="note">&middot; {{ p.days_per_week }} days a week &middot; {{ p.exercise_count }} exercises</span></h2>
+  <p class="note">{{ p.description }}</p>
+  <div class="grid two">
+    <div>
+      <h3>Plan</h3>
+      <table>
+        <tr><th>#</th><th>Exercise</th><th class="num">Sets &times; reps</th></tr>
+        {% for e in p.exercises %}
+        <tr><td>{{ e.position }}</td><td>{{ e.exercise_name }}</td>
+            <td class="num">{{ e.target_sets }} &times; {{ e.target_reps }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div>
+      <h3>What actually happened, last 30 days</h3>
+      <table>
+        <tr><th>Exercise</th><th class="num">Sets done</th><th class="num">Avg reps</th><th class="num">Adherence</th></tr>
+        {% for a in p.adherence %}
+        <tr>
+          <td>{{ a.exercise }}</td>
+          <td class="num">{{ a.performed_sets }}</td>
+          <td class="num">{{ a.avg_reps }}</td>
+          <td class="num">{{ a.adherence_pct if a.adherence_pct is not none else '-' }}%</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card"><p class="empty">No programs yet.</p></div>
+{% endfor %}
+{% endblock %}

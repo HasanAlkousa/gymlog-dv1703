@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Today - GymLog{% endblock %}
+{% block content %}
+
+<div class="grid three">
+  <div class="card">
+    <div class="figure">{{ summary.volume_this_week|kg }} <small>kg</small></div>
+    <div class="figure-label">Lifted this week</div>
+    {% if change is not none %}
+      <div class="delta {{ 'up' if change >= 0 else 'down' }}">
+        {{ '+' if change >= 0 }}{{ change }}% vs last week
+      </div>
+    {% endif %}
+  </div>
+  <div class="card">
+    <div class="figure">{{ summary.sessions_this_week }}</div>
+    <div class="figure-label">Sessions this week</div>
+    <div class="note">{{ summary.sessions_total }} logged in total</div>
+  </div>
+  <div class="card">
+    <div class="figure">{{ summary.pr_count }}</div>
+    <div class="figure-label">Exercises with a record</div>
+    <div class="note"><a href="{{ url_for('records') }}">See all records</a></div>
+  </div>
+</div>
+
+<div class="card">
+  {% if open_workout %}
+    <h2>You have a session in progress</h2>
+    <a class="button" href="{{ url_for('workout_detail', workout_id=open_workout.workout_id) }}">Continue logging</a>
+  {% else %}
+    <h2>Start a session</h2>
+    <form method="post" action="{{ url_for('start_workout') }}" class="field-row">
+      <div>
+        <label for="program_id">Program</label>
+        <select id="program_id" name="program_id">
+          <option value="">Empty session</option>
+          {% for p in programs %}
+            <option value="{{ p.program_id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div><button type="submit">Start</button></div>
+    </form>
+    <p class="note">Starting from a program copies its exercises into the session in one stored-procedure call.</p>
+  {% endif %}
+</div>
+
+<div class="grid two">
+  <div class="card">
+    <h2>Where the work went, last 30 days</h2>
+    {% if balance %}
+      {% set top = balance[0].volume_kg %}
+      {% for row in balance %}
+        <div class="bar-row">
+          <span>{{ row.muscle_group }}</span>
+          <span><span class="bar {{ row.body_region }}" style="width: {{ (100 * row.volume_kg / top)|round(0, 'floor') }}%; display:block;"></span></span>
+          <span class="bar-val">{{ row.volume_kg|kg }} kg</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">Nothing logged in the last 30 days yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Lifts that have stopped moving</h2>
+    {% if stalled %}
+      <table>
+        <tr><th>Exercise</th><th class="num">Best 8 w</th><th class="num">Record</th><th class="num">Days</th></tr>
+        {% for row in stalled %}
+        <tr>
+          <td>{{ row.exercise }}</td>
+          <td class="num">{{ row.best_1rm_8w }}</td>
+          <td class="num">{{ row.all_time_1rm }}</td>
+          <td class="num">{{ row.days_since_pr }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      <p class="note">Trained at least three times in eight weeks without beating the record. Consider dropping the weight 10% and building back up.</p>
+    {% else %}
+      <p class="empty">Everything is still going up.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Latest sessions</h2>
+  {% if recent %}
+  <table>
+    <tr><th>Date</th><th>Program</th><th class="num">Exercises</th><th class="num">Sets</th><th class="num">Volume</th><th></th></tr>
+    {% for w in recent %}
+    <tr>
+      <td>{{ w.started_at|dt }}</td>
+      <td>{{ w.program_name or 'Free session' }}</td>
+      <td class="num">{{ w.exercises }}</td>
+      <td class="num">{{ w.sets }}</td>
+      <td class="num">{{ w.total_volume_kg|kg }} kg</td>
+      <td class="num"><a href="{{ url_for('workout_detail', workout_id=w.workout_id) }}">Open</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p class="empty">No sessions yet. Start one above.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Log in - GymLog{% endblock %}
+{% block content %}
+<div class="auth">
+  <h1>gymlog</h1>
+  <p>Write down every set. Watch the numbers move.</p>
+  <div class="card">
+    <form method="post" class="stack">
+      <div><label for="username">Username</label>
+        <input id="username" name="username" required autofocus></div>
+      <div><label for="password">Password</label>
+        <input id="password" name="password" type="password" required></div>
+      <button type="submit">Log in</button>
+    </form>
+  </div>
+  <p>No account yet? <a href="{{ url_for('register') }}">Create one</a>.</p>
+</div>
+{% endblock %}

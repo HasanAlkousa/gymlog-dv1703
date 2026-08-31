@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Body weight - GymLog{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Log a weigh-in</h2>
+  <form method="post" class="field-row">
+    <div><label for="measured_on">Date</label><input id="measured_on" name="measured_on" type="date" value="{{ today }}" required></div>
+    <div><label for="weight_kg">Weight (kg)</label><input id="weight_kg" name="weight_kg" type="number" step="0.1" min="30" max="300" required></div>
+    <div><label for="body_fat_pct">Body fat (%)</label><input id="body_fat_pct" name="body_fat_pct" type="number" step="0.1" min="3" max="70"></div>
+    <div><button type="submit">Save</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>History</h2>
+  {% if measurements %}
+  <canvas id="bodyChart" height="90"></canvas>
+  <table>
+    <tr><th>Date</th><th class="num">Weight</th><th class="num">Body fat</th></tr>
+    {% for m in measurements|reverse %}
+    <tr><td>{{ m.measured_on }}</td>
+        <td class="num"><span class="load">{{ m.weight_kg }}</span> kg</td>
+        <td class="num">{{ m.body_fat_pct or '-' }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="empty">No weigh-ins yet.</p>{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if measurements %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+new Chart(document.getElementById('bodyChart'), {
+  type: 'line',
+  data: {
+    labels: {{ measurements|map(attribute='measured_on')|map('string')|list|tojson }},
+    datasets: [{
+      label: 'Body weight (kg)',
+      data: {{ measurements|map(attribute='weight_kg')|map('float')|list|tojson }},
+      borderColor: '#171d24', backgroundColor: '#171d24',
+      tension: 0.25, pointRadius: 0, borderWidth: 2
+    }]
+  },
+  options: { plugins: { legend: { display: false } },
+             scales: { y: { grid: { color: '#e5e8e3' } }, x: { grid: { display: false } } } }
+});
+</script>
+{% endif %}
+{% endblock %}
