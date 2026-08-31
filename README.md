@@ -77,4 +77,3 @@ Read from the environment, with defaults in `db.py`:
 | `app.py` | Flask routes |
 | `seed_data.py` | Generates realistic training history |
 | `templates/`, `static/` | Interface |
-| `report/` | Report and E/R diagram |
